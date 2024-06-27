@@ -1,5 +1,5 @@
 --
-local Proxy_table = mtul.classes.proxy_table
+local Proxy_table = mtul.class.proxy_table
 Proxy_table = {
     registered_proxies = {},
     proxy_children = {}
