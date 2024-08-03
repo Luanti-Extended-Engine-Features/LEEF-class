@@ -1,8 +1,12 @@
 --- An instantiatable class to inherit for defining new instantiatble classes classes
--- the "base" class. To make a new class call `new_class:inherit(your_new_class)`
+-- the "base" class. To make a new class call `new_class:inherit(your_new_class)`.
+-- also note that these classes will not have the type "table" but "class".
 --
 -- @classmod new_class
-
+local objects = {}
+setmetatable(objects, {
+    __mode = 'kv' --allow garbage collection.
+})
 mtul.class.new_class = {
     instance = false,
     --__no_copy = true
@@ -18,6 +22,7 @@ mtul.class.new_class = {
 -- @return def a new base class
 -- @function Guns4d.Instantiatable_class:inherit()
 function mtul.class.new_class:inherit(def)
+    objects[def] = true
     --construction chain for inheritance
     --if not def then def = {} else def = table.shallow_copy(def) end
     def.parent_class = self
@@ -59,4 +64,9 @@ function mtul.class.new_class:new(def)
     --call the construct chain for inherited objects, also important this is called after meta changes
     self.construct(def)
     return def
+end
+local old_type = type
+function type(a, ...)
+    if objects[a] then return "class" end
+    return old_type(a, ...)
 end
