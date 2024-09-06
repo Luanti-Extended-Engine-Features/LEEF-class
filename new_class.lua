@@ -65,6 +65,29 @@ function mtul.class.new_class:new(def)
     self.construct(def)
     return def
 end
+function mtul.class.new_class:dump(dump_classes)
+    local str = "{"
+    for i, v in pairs(self) do
+        if type(i) == "string" then
+            str=str.."\n\t[\""..tostring(i).."\"] = "
+        else
+            str=str.."\n\t["..tostring(i).."] = "
+        end
+        if type(v) == "table" then
+            local dumptable = dump(v):gsub("\n", "\n\t")
+            str=str..dumptable
+        elseif type(v) == "class" then
+            if dump_classes then
+                str = str..v:dump():gsub("\n", "\n\t")
+            else
+                str = str..tostring(dump_classes)
+            end
+        else
+            str = str..tostring(v)
+        end
+    end
+    return str.."\n}"
+end
 local old_type = type
 function type(a, ...)
     if objects[a] then return "class" end
