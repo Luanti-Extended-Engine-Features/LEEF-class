@@ -7,7 +7,7 @@ local objects = {}
 setmetatable(objects, {
     __mode = 'kv' --allow garbage collection.
 })
-mtul.class.new_class = {
+leef.class.new_class = {
     instance = false,
     --__no_copy = true
 }
@@ -21,7 +21,7 @@ mtul.class.new_class = {
 -- @param def the table containing a new definition (where the class calling the method is the parent). The content of the definition will override the fields for it's children.
 -- @return def a new base class
 -- @function Guns4d.Instantiatable_class:inherit()
-function mtul.class.new_class:inherit(def)
+function leef.class.new_class:inherit(def)
     objects[def] = true
     --construction chain for inheritance
     --if not def then def = {} else def = table.shallow_copy(def) end
@@ -52,7 +52,7 @@ end
 --- creates an instance of the base class. Calls all constructors in the chain with def.instance=true
 -- @return def a new instance of the class.
 -- @function Guns4d.Instantiatable_class:new(def)
-function mtul.class.new_class:new(def)
+function leef.class.new_class:new(def)
     --if not def then def = {} else def = table.shallow_copy(def) end
     def.base_class = self
     def.instance = true
@@ -65,7 +65,7 @@ function mtul.class.new_class:new(def)
     self.construct(def)
     return def
 end
-function mtul.class.new_class:dump(dump_classes)
+function leef.class.new_class:dump(dump_classes)
     local str = "{"
     for i, v in pairs(self) do
         if type(i) == "string" then

@@ -8,7 +8,7 @@ local Proxy_table = {
 --setmetatable(Proxy_table.tables_by_proxies, {__mode="v"})
 --setmetatable(Proxy_table.proxy_children, {__mode="k"})
 
-mtul.class.proxy_table = Proxy_table
+leef.class.proxy_table = Proxy_table
 --this creates proxy tables in a structure of tables
 --this is great if you want to prevent the change of a table
 --but still want it to be viewable, such as with constants
@@ -24,7 +24,7 @@ local metatable = {
         end
     end,
     __newindex = function(table, key)
-        assert(false, "attempt to edit immutable table, cannot edit a proxy table (MTUL-class)")
+        assert(false, "attempt to edit immutable table, cannot edit a proxy table (LEEF-class)")
     end,
     __len = function(t)
         print("test")
