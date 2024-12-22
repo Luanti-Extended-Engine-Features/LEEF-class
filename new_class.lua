@@ -1,6 +1,6 @@
 --- An instantiatable class to inherit for defining new instantiatble classes classes
 -- the "base" class. To make a new class call `new_class:inherit(your_new_class)`.
--- also note that these classes will not have the type "table" but "class".
+-- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 --
 -- @classmod new_class
 local objects = {}
@@ -58,7 +58,8 @@ end
 
 
 --- creates an instance of the base class. Calls all constructors in the chain with def.instance=true
--- @return def field for the new instance of the class. If fields are not present they will refer to the base class's fields (if present in the base class).
+-- @param def field for the new instance of the class. If fields are not present they will refer to the base class's fields (if present in the base class).
+-- @return self a new instance of the class.
 -- @function new
 function leef.class.new_class:new(def)
     --if not def then def = {} else def = table.shallow_copy(def) end
@@ -73,6 +74,12 @@ function leef.class.new_class:new(def)
     self.construct(def)
     return def
 end
+
+--- (for printing) dumps the variables of this class
+-- @param self
+-- @tparam bool dump_classes whether to also print/dump classes.
+-- @treturn string
+-- @function dump
 function leef.class.new_class:dump(dump_classes)
     local str = "{"
     for i, v in pairs(self) do
@@ -96,6 +103,7 @@ function leef.class.new_class:dump(dump_classes)
     end
     return str.."\n}"
 end
+
 local old_type = type
 function type(a, ...)
     if objects[a] then return "class" end
