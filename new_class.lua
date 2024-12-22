@@ -11,16 +11,21 @@ leef.class.new_class = {
     instance = false,
     --__no_copy = true
 }
---- new_class
--- @table new_class
+
+--- instance
 -- @field instance defines wether the object is an instance, use this in construction to determine what changes to make
+
+--- base_class
 -- @field base_class only present for instances: the class from which this instance originates
+
+--- parent_class
 -- @field parent_class the class from which this class was inherited from
 
 --- creates a new base class. Calls all constructors in the chain with def.instance=true
--- @param def the table containing a new definition (where the class calling the method is the parent). The content of the definition will override the fields for it's children.
+-- @param self the table which is being inherited (meaning variables that do not exist in the child, will read as the parent's). Be careful to remember that subtable values are NOT inherited, use the constructor to create subtables.
+-- @param def the table containing the base definition of the class. This should contain a @{construct}
 -- @return def a new base class
--- @function Guns4d.Instantiatable_class:inherit()
+-- @function inherit(self)
 function leef.class.new_class:inherit(def)
     objects[def] = true
     --construction chain for inheritance
@@ -44,14 +49,17 @@ function leef.class.new_class:inherit(def)
     def.construct(def) --moved this to call after the setmetatable, it doesnt seem to break anything, and how it should be? I dont know when I changed it... hopefully not totally broken.
     return def
 end
---- construct
--- every parent constructor is called in order of inheritance, this is used to make changes to the child table. In self you will find base_class defining what class it is from, and the bool instance indicating (shocking) wether it is an instance.
--- @function construct where self is the definition (after all higher parent calls) of the table. This is the working object, no returns necessary to change it's fields/methods.
+
+--- Called when a child, grandchild, (and so on), instance or class is created. Check `self.instance` and `self.base_class` to determine what type of object it is.
+-- every constructor from every parent is called in heirarchy (first to last).
+-- use this to instantiate things like subtables or child class instances.
+-- @param self the table (which would be def from new()).
+-- @function construct(
 
 
 --- creates an instance of the base class. Calls all constructors in the chain with def.instance=true
--- @return def a new instance of the class.
--- @function Guns4d.Instantiatable_class:new(def)
+-- @return def field for the new instance of the class. If fields are not present they will refer to the base class's fields (if present in the base class).
+-- @function new
 function leef.class.new_class:new(def)
     --if not def then def = {} else def = table.shallow_copy(def) end
     def.base_class = self
