@@ -1,7 +1,8 @@
 --- immutable proxy tables for protection of variables.
 --
 -- WARNING: this is not technically a class, it is not based off `new_class`. And thus does not have an inherit or construct method.
--- the point of this module is to allow somebody to create a read only table based off of a normal lua table. Attempting to modify a proxy table will throw an error.
+--
+-- The point of this module is to allow somebody to create a read only table based off of a normal lua table. Attempting to modify a proxy table will throw an error.
 -- also note there is no good way to print this because tables are tied to their proxies independently, and then grabbed through the __index method rather then keeping a "working tree" of sub-tables.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module.
 --
