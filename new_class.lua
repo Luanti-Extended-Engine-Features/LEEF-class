@@ -1,4 +1,4 @@
---- An instantiatable class to inherit for defining new instantiatble classes classes
+--- An instantiatable class to inherit for defining new instantiatable classes classes
 -- the "base" class. To make a new class call `new_class:inherit(your_new_class)`.
 -- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module
