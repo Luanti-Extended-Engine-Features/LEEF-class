@@ -26,7 +26,7 @@ leef.class.new_class = {
 -- @param self the table which is being inherited (meaning variables that do not exist in the child, will read as the parent's). Be careful to remember that subtable values are NOT inherited, use the constructor to create subtables.
 -- @param def the table containing the base definition of the class. This should contain a @{construct}
 -- @return def a new base class
--- @function inherit(self)
+-- @function inherit
 function leef.class.new_class:inherit(def)
     objects[def] = true
     --construction chain for inheritance
@@ -55,7 +55,7 @@ end
 -- every constructor from every parent is called in heirarchy (first to last).
 -- use this to instantiate things like subtables or child class instances.
 -- @param self the table (which would be def from new()).
--- @function construct(
+-- @function construct
 
 
 --- creates an instance of the base class. Calls all constructors in the chain with def.instance=true
