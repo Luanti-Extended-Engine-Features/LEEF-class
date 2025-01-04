@@ -36,7 +36,7 @@ local proxy_metatable = {
 }
 
 --- create a new proxy table
--- @tparam table
+-- @tparam table table to create immutable interface for
 -- @return Proxy table
 -- @function new
 function proxy_table.new(table)
