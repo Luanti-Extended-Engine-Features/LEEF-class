@@ -28,8 +28,13 @@ leef.class.new_class = {
 -- @return def a new base class
 -- @function inherit
 function leef.class.new_class:inherit(def)
-    objects[def] = true
     --construction chain for inheritance
+    if not def.name then
+        local info = debug.getinfo(2)
+        minetest.log("warning", "LEEF new_class.lua: no name defined for class defined at "..info.short_src..":"..info.currentline)
+        def.name = info.source..":"..info.currentline
+    end
+    objects[def] = "class"
     --if not def then def = {} else def = table.shallow_copy(def) end
     def.parent_class = self
     def.instance = false
@@ -50,6 +55,14 @@ function leef.class.new_class:inherit(def)
     def.construct(def) --moved this to call after the setmetatable, it doesnt seem to break anything, and how it should be? I dont know when I changed it... hopefully not totally broken.
     return def
 end
+--- checks if something is a class
+-- @param value
+-- @tparam bool
+-- @function is_class
+function leef.class.is_class(value)
+    if objects[value] then return true end
+    return false
+end
 
 --- Called when a child, grandchild, (and so on), instance or class is created. Check `self.instance` and `self.base_class` to determine what type of object it is.
 -- every constructor from every parent is called in heirarchy (first to last).
@@ -63,6 +76,7 @@ end
 -- @return self a new instance of the class.
 -- @function new
 function leef.class.new_class:new(def)
+    objects[def] = "class"
     --if not def then def = {} else def = table.shallow_copy(def) end
     def.base_class = self
     def.instance = true
@@ -106,7 +120,10 @@ function leef.class.new_class:dump(dump_classes)
 end
 
 local old_type = type
-function type(a, ...)
-    if objects[a] then return "class" end
-    return old_type(a, ...)
+local objects_by_proxy = leef.class.proxy_table.objects_by_proxy
+function type(...)
+    local a = ...
+    if objects[a] then return objects[a] end
+    if objects_by_proxy[a] then return type(objects_by_proxy[a]) end
+    return old_type(...)
 end

@@ -11,17 +11,17 @@ leef.class.proxy_table = {}
 local proxy_table = leef.class.proxy_table
 
 
-proxy_table.tables_by_proxy = {} --proxies indexed by their tables
-local tables_by_proxy = proxy_table.tables_by_proxy
-setmetatable(tables_by_proxy, {
+proxy_table.objects_by_proxy = {} --proxies indexed by their tables
+local objects_by_proxy = proxy_table.objects_by_proxy
+setmetatable(objects_by_proxy, {
     __mode = "v" --proxies wont be kept around if their tables dont exist. Since proxy tables themselves have weak keys AND values, this means that proxies will be released if their tables dont exist
 })
 
 local proxy_metatable = {
     __index = function(t, k)
-        local real_value = tables_by_proxy[t][k]
+        local real_value = objects_by_proxy[t][k]
         local value_type = type(real_value)
-        if ((value_type == "table") or (value_type == "class")) then
+        if (value_type == "table") then
             local val = proxy_table.new(real_value)
             rawset(t, k, val)
             return val
@@ -42,43 +42,54 @@ local proxy_metatable = {
 function proxy_table.new(table)
     assert(table~=proxy_table, "do not call leef.class.proxy_table functions as methods.")
     local proxy = {
-        __LEEF_PROXY_PARENT = table
+        __LEEF_PROXY_PARENT = table,
     }
     setmetatable(proxy, proxy_metatable)
-    tables_by_proxy[proxy] = table
+    objects_by_proxy[proxy] = table
     return proxy
 end
 
-local old_next = next
-function next(p, k)
-    local original = tables_by_proxy[p]
-    if original then --if the table exists as an index here, it is a proxy.
-        local next_key, _ = old_next(original, k) --value ignored as might be unsafe to return.
-        return next_key, original[next_key] --get the value of the proxy that way if it's a table it is protected, and otherwise it will return the same thing.
-    else
-        return old_next(p,k)
-    end
-end
---since next is modified we basically just return the normal pairs func.
-function pairs(t)
-    return next, t, nil
+--- check if its a proxy table
+-- @param value
+-- @tparam bool
+function proxy_table.is_proxy(tbl)
+    if objects_by_proxy[tbl] then return true end
+    return false
 end
 
+
+-- immoral overrides. that ill probably remove some day.
+local old_ipairs = ipairs
+local old_pairs = pairs
+
+local function proxy_next(p, k)
+    local original = objects_by_proxy[p]
+    local next_key, _ = next(original, k) --value ignored as might be unsafe to return.
+    return next_key, original[next_key] --get the value of the proxy that way if it's a table it is protected, and otherwise it will return the same thing.
+end
+--since next is modified we basically just return the normal pairs func.
 
 local function iter(p, i)
     i = i + 1
-    local t = tables_by_proxy[p]
+    local t = objects_by_proxy[p]
     local v = t[i]
     if v then
       return i, v
     end
 end
-local old_ipairs = ipairs
-function ipairs(p)
-    if tables_by_proxy[p] then
+function pairs(...)
+    local t = ...
+    if objects_by_proxy[t] then
+        return proxy_next, t, nil
+    end
+    return old_pairs(...)
+end
+function ipairs(...)
+    local p = ...
+    if objects_by_proxy[p] then
         return iter, p, 0
     else
-        return old_ipairs(p)
+        return old_ipairs(...)
     end
 end
 
