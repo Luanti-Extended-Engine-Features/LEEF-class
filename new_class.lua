@@ -55,9 +55,10 @@ function leef.class.new_class:inherit(def)
     def.construct(def) --moved this to call after the setmetatable, it doesnt seem to break anything, and how it should be? I dont know when I changed it... hopefully not totally broken.
     return def
 end
+
 --- checks if something is a class
--- @param value
--- @tparam bool
+-- @param value value
+-- @treturn bool
 -- @function is_class
 function leef.class.is_class(value)
     if objects[value] then return true end

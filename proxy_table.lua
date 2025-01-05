@@ -50,10 +50,11 @@ function proxy_table.new(table)
 end
 
 --- check if its a proxy table
--- @param value
--- @tparam bool
-function proxy_table.is_proxy(tbl)
-    if objects_by_proxy[tbl] then return true end
+-- @param value value it check if proxy
+-- @treturn bool
+-- @function is_proxy
+function proxy_table.is_proxy(value)
+    if objects_by_proxy[value] then return true end
     return false
 end
 
