@@ -59,11 +59,12 @@ end
 --- checks if something is a class
 -- @param value value
 -- @treturn bool
--- @function is_class
+-- @function leef.class.is_class
 function leef.class.is_class(value)
     if objects[value] then return true end
     return false
 end
+
 
 --- Called when a child, grandchild, (and so on), instance or class is created. Check `self.instance` and `self.base_class` to determine what type of object it is.
 -- every constructor from every parent is called in heirarchy (first to last).
@@ -111,7 +112,7 @@ function leef.class.new_class:dump(dump_classes)
             if dump_classes then
                 str = str..v:dump():gsub("\n", "\n\t")
             else
-                str = str..tostring(dump_classes)
+                str = str..tostring(v..":<"..v.name..">:"..((v.instance and "instance=true") or "instance=false"))
             end
         else
             str = str..tostring(v)
@@ -119,6 +120,15 @@ function leef.class.new_class:dump(dump_classes)
     end
     return str.."\n}"
 end
+--[[local old_dump = dump
+function dump(...)
+    local t = ...
+    if leef.class.is_class(t) then
+        return t:dump()
+    end
+    return old_dump(...)
+end]]
+
 
 local old_type = type
 local objects_by_proxy = leef.class.proxy_table.objects_by_proxy
