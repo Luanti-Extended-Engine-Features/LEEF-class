@@ -1,5 +1,5 @@
 --- An instantiatable class to inherit for defining new instantiatable classes classes
--- the "base" class. To make a new class call `new_class:inherit(your_new_class)`.
+-- the "base" class. To make a new class call `leef.class.new_class:inherit(your_new_class)` or `leef.class.new()`.
 -- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module
 --
@@ -51,9 +51,12 @@ function leef.class.new_class:inherit(def)
         end
     end
     --iterate through table properties
-    setmetatable(def, {__index = self})
+    setmetatable(def, {__index = self, __call = function(tbl, ...) tbl:new(...) end})
     def.construct(def) --moved this to call after the setmetatable, it doesnt seem to break anything, and how it should be? I dont know when I changed it... hopefully not totally broken.
     return def
+end
+function leef.class.new(def)
+    return leef.class.new_class:inherit(def)
 end
 
 --- checks if something is a class
