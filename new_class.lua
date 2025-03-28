@@ -1,5 +1,5 @@
 --- An instantiatable class to inherit for defining new instantiatable classes classes
--- the "base" class. To make a new class call `leef.class.new_class:inherit(your_new_class)` or `leef.class.new()`.
+-- the "base" class. To make a new class call `leef.class.new(def)` or `leef.class.new_class:new_class(def)`
 -- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module
 --
@@ -13,6 +13,12 @@ leef.class.new_class = {
     --__no_copy = true
 }
 
+
+--TODO:
+--make base classes protected by proxy and only moddable by the file they were declared in using debug library.
+--allow
+
+
 --- instance
 -- @field instance defines wether the object is an instance, use this in construction to determine what changes to make
 
@@ -22,13 +28,19 @@ leef.class.new_class = {
 --- parent_class
 -- @field parent_class the class from which this class was inherited from
 
---- creates a new base class. Calls all constructors in the chain with def.instance=true
+--- creates a new base class. Calls all constructors in the chain with def.instance=true. Can also be invoked by calling the class.
 -- @param self the table which is being inherited (meaning variables that do not exist in the child, will read as the parent's). Be careful to remember that subtable values are NOT inherited, use the constructor to create subtables.
 -- @param def the table containing the base definition of the class. This should contain a @{construct}
 -- @return def a new base class
--- @function inherit
-function leef.class.new_class:inherit(def)
+-- @function new_class
+function leef.class.new_class:new_class(def)
+    local t = type(def)
+    if not (objects[def] or (t == "table")) then
+        local info = debug.getinfo(2)
+        error("class definition expected table, got `"..type(def).."` at class defined at "..info.short_src..":"..info.currentline)
+    end
     --construction chain for inheritance
+    --reminder that self is the parent class
     if not def.name then
         local info = debug.getinfo(2)
         minetest.log("warning", "LEEF new_class.lua: no name defined for class defined at "..info.short_src..":"..info.currentline)
@@ -39,24 +51,54 @@ function leef.class.new_class:inherit(def)
     def.parent_class = self
     def.instance = false
     --def.__no_copy = true
-    def._construct_low = def.construct
+
     --this effectively creates a construction chain by overwriting .construct
-    function def.construct(parameters)
+    function def._construct(parameters)
         --rawget because in a instance it may only be present in a hierarchy but not the table itself
-        if self.construct then
-            self.construct(parameters)
+        if self._construct then
+            self._construct(parameters)
         end
-        if rawget(def, "_construct_low") then
-            def._construct_low(parameters)
+        if rawget(def, "construct") then
+            def.construct(parameters)
         end
     end
+
+    --legacy behavior is different.
+    if not def._legacy_inherit then
+        function def._construct_new_class(parameters)
+            --rawget because in a instance it may only be present in a hierarchy but not the table itself
+            if self._construct_new_class then
+                self._construct_new_class(parameters)
+            end
+            if rawget(def, "construct_new_class") then
+                def.construct_new_class(parameters)
+            end
+        end
+    end
+
     --iterate through table properties
     setmetatable(def, {__index = self, __call = function(tbl, ...) tbl:new(...) end})
-    def.construct(def) --moved this to call after the setmetatable, it doesnt seem to break anything, and how it should be? I dont know when I changed it... hopefully not totally broken.
+
+    if not def._legacy_inherit then
+        if self._construct_new_class then
+            self._construct_new_class(def, true)
+        end
+    else
+        def._construct(def)
+    end
+
     return def
 end
+---deprecated. The same as new_class, but has settings differences.
+-- @function inherit
+function leef.class.new_class:inherit(def)
+    def._legacy_inherit = true
+    self:new_class(def)
+    return def
+end
+
 function leef.class.new(def)
-    return leef.class.new_class:inherit(def)
+    return leef.class.new_class:new_class(def)
 end
 
 --- checks if something is a class
@@ -86,12 +128,13 @@ function leef.class.new_class:new(def)
     def.base_class = self
     def.instance = true
     --def.__no_copy = true
-    function def:inherit()
+    function def:new_class()
         assert(false, "cannot inherit instantiated object")
     end
+    def.inherit = def.new_class
     setmetatable(def, {__index = self})
     --call the construct chain for inherited objects, also important this is called after meta changes
-    self.construct(def)
+    self._construct(def)
     return def
 end
 
