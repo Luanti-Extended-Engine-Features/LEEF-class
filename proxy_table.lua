@@ -3,7 +3,7 @@
 --
 -- constructor accepts a custom function for handling attempts to change the value of fields. Defaults to an error message.
 --
--- This works with a given tree of tables.
+-- This works with a given tree of tables. But note it does not protect classes within the table from being modified.
 --
 -- @module proxy_table
 
