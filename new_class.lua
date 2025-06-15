@@ -91,7 +91,6 @@ function leef.class.new_class:new_class(def)
 end
 
 ---deprecated. The same as new_class, but has settings differences.
--- @function inherit
 function leef.class.new_class:inherit(def)
     def._legacy_inherit = true
     self:new_class(def)
