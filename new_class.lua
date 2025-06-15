@@ -19,14 +19,14 @@ leef.class.new_class = {
 --allow
 
 
---- instance
--- @field instance defines wether the object is an instance, use this in construction to determine what changes to make
+--- Indicates wether the object is an instance or the base class
+-- @field instance
 
---- base_class
--- @field base_class only present for instances: the class from which this instance originates
+--- Only present for instances: reference to the class from which this instance originates
+-- @field base_class
 
---- parent_class
--- @field parent_class the class from which this class was inherited from
+--- Reference to the class from which THIS object (or it's base class) was inherited from
+-- @field parent_class
 
 --- creates a new base class. Calls all constructors in the chain with def.instance=true. Can also be invoked by calling the class.
 -- @param self the table which is being inherited (meaning variables that do not exist in the child, will read as the parent's). Be careful to remember that subtable values are NOT inherited, use the constructor to create subtables.
@@ -39,22 +39,19 @@ function leef.class.new_class:new_class(def)
         local info = debug.getinfo(2)
         error("class definition expected table, got `"..type(def).."` at class defined at "..info.short_src..":"..info.currentline)
     end
-    --construction chain for inheritance
-    --reminder that self is the parent class
+
+    --set variables in this table.
     if not def.name then
         local info = debug.getinfo(2)
         minetest.log("warning", "LEEF new_class.lua: no name defined for class defined at "..info.short_src..":"..info.currentline)
         def.name = info.source..":"..info.currentline
     end
     objects[def] = "class"
-    --if not def then def = {} else def = table.shallow_copy(def) end
     def.parent_class = self
     def.instance = false
-    --def.__no_copy = true
 
-    --this effectively creates a construction chain by overwriting .construct
+    --construction chain- calls all parent (and sub-parent) construction methods by calling its parent's constructor method (which then calls the next parent's etc)
     function def._construct(parameters)
-        --rawget because in a instance it may only be present in a hierarchy but not the table itself
         if self._construct then
             self._construct(parameters)
         end
@@ -63,7 +60,7 @@ function leef.class.new_class:new_class(def)
         end
     end
 
-    --legacy behavior is different.
+    --allow backwards compatibility. Legacy class calls it's own class constructor method
     if not def._legacy_inherit then
         function def._construct_new_class(parameters)
             --rawget because in a instance it may only be present in a hierarchy but not the table itself
@@ -90,13 +87,15 @@ function leef.class.new_class:new_class(def)
     return def
 end
 
----deprecated. The same as new_class, but has settings differences.
+--deprecated. The same as new_class, but has settings differences.
 function leef.class.new_class:inherit(def)
     def._legacy_inherit = true
     self:new_class(def)
     return def
 end
 
+--- creates a new class
+-- @param def definition of the class
 function leef.class.new(def)
     return leef.class.new_class:new_class(def)
 end
