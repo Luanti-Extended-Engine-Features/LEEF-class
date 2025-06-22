@@ -101,7 +101,7 @@ end
 --- creates a new class
 -- @param def definition of the class
 -- @treturn class
--- @function leef.class.is_class
+-- @function leef.class.new_class
 function leef.class.new(def)
     return leef.New_Class:new_class(def)
 end
