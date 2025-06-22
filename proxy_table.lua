@@ -116,8 +116,6 @@ end
 local function or_equals(a,b,c)
     return (a==b) or (a==c)
 end
-local old_ipairs = ipairs
-local old_pairs = pairs
 local function proxy_pairs_iterator(overrides,k,original,iterating_proxy,proxy)
     local outkey, _ = k, nil
     if iterating_proxy then
@@ -134,6 +132,7 @@ local function proxy_pairs_iterator(overrides,k,original,iterating_proxy,proxy)
     return outkey, outkey and proxy[outkey], iterating_proxy
 end
 --since next is modified we basically just return the normal pairs func to not kill perf
+local old_pairs = pairs
 function pairs(...)
     local t = ...
     local original = objects_by_proxy[t]
@@ -160,6 +159,7 @@ local function iter(p, i)
       return i, v
     end
 end
+local old_ipairs = ipairs
 function ipairs(...)
     local p = ...
     if objects_by_proxy[p] then

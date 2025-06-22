@@ -87,15 +87,20 @@ function leef.class.new_class:new_class(def)
     return def
 end
 
+
 --deprecated. The same as new_class, but has settings differences.
+
 function leef.class.new_class:inherit(def)
     def._legacy_inherit = true
     self:new_class(def)
     return def
 end
 
+
 --- creates a new class
 -- @param def definition of the class
+-- @treturn class
+-- @function leef.class.new
 function leef.class.new(def)
     return leef.class.new_class:new_class(def)
 end
