@@ -85,12 +85,18 @@ function leef.new_class:new_class(def)
     return def
 end
 
---- Called when a child, grandchild, (and so on), instance or class is created. Check `self.instance` and `self.base_class` to determine what type of object it is.
--- every constructor from every parent is called in heirarchy (first to last).
--- use this to instantiate things like subtables or child class instances.
+--- Called when an instance is created.
+-- will be called for any classes which are children or grandchildren (etc) instances, aswell as instances of this class.
+-- use this to instantiate arbitrary data like subclasses.
+-- if the field "_legacy_inherit" is present, it will be called for new base classes as well as the initialization of this base class if present.
 -- @param self the table (which would be def from new()).
--- @function construct
+-- @function new_class:construct
 
+--- Called when an instance is created.
+-- will be called when a new child or grandchild (etc) class is created.
+-- useful for instantiation of subtables or any other data.
+-- @param self the table (which would be def from new()).
+-- @function new_class:construct_new_class
 
 --- creates an instance of the base class. Calls all constructors in the chain with def.instance=true
 -- @param def field for the new instance of the class. If fields are not present they will refer to the base class's fields (if present in the base class).
