@@ -3,7 +3,7 @@
 -- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module
 --
--- @classmod new_class
+-- @classmod New_Class
 local objects = {}
 setmetatable(objects, {
     __mode = 'kv' --allow garbage collection.
