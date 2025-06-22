@@ -1,19 +1,19 @@
 --- An instantiatable class to inherit for defining new instantiatable classes classes
--- the "base" class. To make a new class call `leef.class.new(def)` or `leef.New_Class:new_class(def)`
+-- the "base" class. To make a new class call `leef.class.new(def)` or `leef.new_class:new_class(def)`
 -- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module
 --
--- @classmod New_Class
+-- @classmod new_class
 local objects = {}
 setmetatable(objects, {
     __mode = 'kv' --allow garbage collection.
 })
-leef.New_Class = {
+leef.new_class = {
     instance = false,
     --__no_copy = true
 }
 --backwards compat
-leef.new_class = leef.New_Class
+leef.new_class = leef.new_class
 
 --TODO:
 --make base classes protected by proxy and only moddable by the file they were declared in using debug library.
@@ -33,8 +33,8 @@ leef.new_class = leef.New_Class
 -- @param self the table which is being inherited (meaning variables that do not exist in the child, will read as the parent's). Be careful to remember that subtable values are NOT inherited, use the constructor to create subtables.
 -- @param def the table containing the base definition of the class. This should contain a @{construct}
 -- @return def a new base class
--- @function New_Class:new_class
-function leef.New_Class:new_class(def)
+-- @function new_class:new_class
+function leef.new_class:new_class(def)
     local t = type(def)
     if not (objects[def] or (t == "table")) then
         local info = debug.getinfo(2)
@@ -98,8 +98,8 @@ end
 --- creates an instance of the base class. Calls all constructors in the chain with def.instance=true
 -- @param def field for the new instance of the class. If fields are not present they will refer to the base class's fields (if present in the base class).
 -- @return self a new instance of the class.
--- @function New_Class:new
-function leef.New_Class:new(def)
+-- @function new_class:new
+function leef.new_class:new(def)
     objects[def] = "class"
     --if not def then def = {} else def = table.shallow_copy(def) end
     def.base_class = self
@@ -119,8 +119,8 @@ end
 -- @param self
 -- @tparam bool dump_classes whether to also print/dump classes.
 -- @treturn string
--- @function New_Class:dump
-function leef.New_Class:dump(dump_classes)
+-- @function new_class:dump
+function leef.new_class:dump(dump_classes)
     local str = "{"
     for i, v in pairs(self) do
         if type(i) == "string" then
@@ -145,7 +145,7 @@ function leef.New_Class:dump(dump_classes)
 end
 
 --deprecated. The same as new_class, but has settings differences.
-function leef.New_Class:inherit(def)
+function leef.new_class:inherit(def)
     def._legacy_inherit = true
     self:new_class(def)
     return def
@@ -157,7 +157,7 @@ end
 -- @treturn class
 -- @function leef.class.new_class
 function leef.class.new(def)
-    return leef.New_Class:new_class(def)
+    return leef.new_class:new_class(def)
 end
 
 --- checks if something is a class
