@@ -12,9 +12,6 @@ leef.new_class = {
     instance = false,
     --__no_copy = true
 }
---backwards compat
-leef.new_class = leef.new_class
-
 --TODO:
 --make base classes protected by proxy and only moddable by the file they were declared in using debug library.
 --allow
