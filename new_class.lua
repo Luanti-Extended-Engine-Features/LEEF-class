@@ -12,6 +12,7 @@ leef.new_class = {
     instance = false,
     --__no_copy = true
 }
+leef.class.new_class = leef.new_class
 --TODO:
 --make base classes protected by proxy and only moddable by the file they were declared in using debug library.
 --allow
@@ -20,20 +21,27 @@ leef.new_class = {
 --- Indicates wether the object is an instance or the base class
 -- @field instance
 
+--- Quick dirty way to fix inheritence for old mods.
+-- @field __legacy_inherit
+
 --- Only present for instances: reference to the class from which this instance originates
 -- @field base_class
 
---- Reference to the class from which THIS object (or it's base class) was inherited from
+--- Reference to the class from which THIS object (or it's base class) was inherited from. If table is inherited from multiple classes, than value is a dummy table which inherits values of all classes in the order inherted classes were put in.
 -- @field parent_class
 
---- creates a new base class. Calls all constructors in the chain with def.instance=true. Can also be invoked by calling the class.
--- @param self the table which is being inherited (meaning variables that do not exist in the child, will read as the parent's). Be careful to remember that subtable values are NOT inherited, use the constructor to create subtables.
+--- creates a new base class. Calls all constructors in the chain with def.instance=true. Can also be invoked by calling the class. Constructors will be called in reverse order (that way the first has the "final say" on all fields meaning highest priority)
+-- @param ... tables inherited by def
 -- @param def the table containing the base definition of the class. This should contain a @{construct}
 -- @return def a new base class
 -- @function new_class:new_class
-function leef.new_class:new_class(def)
-    local t = type(def)
-    if not (objects[def] or (t == "table")) then
+function leef.new_class.new_class(...)
+    local inherted = {...}
+    local length = #inherted
+    local def = inherted[length]
+    inherted[#inherted] = nil
+
+    if not (objects[def] or (type(def) == "table")) then
         local info = debug.getinfo(2)
         error("class definition expected table, got `"..type(def).."` at class defined at "..info.short_src..":"..info.currentline)
     end
@@ -45,25 +53,43 @@ function leef.new_class:new_class(def)
         def.name = info.source..":"..info.currentline
     end
     objects[def] = "class"
-    def.parent_class = self
     def.instance = false
+
+    local self
+    if (length-1==1) or def._legacy_inherit then
+        self = inherted[1]
+        def.parent_class = self
+    else
+        def.parent_class = setmetatable({name="multiple_inheritance"}, {__index=function(t, k)
+            for i=1,length-1 do
+                if inherted[i][k] then
+                    return inherted[i][k]
+                end
+            end
+        end})
+    end
 
     --construction chain- calls all parent (and sub-parent) construction methods by calling its parent's constructor method (which then calls the next parent's etc)
     function def._construct(parameters)
-        if self._construct then
-            self._construct(parameters)
+        for i=(length-1), 1, -1 do
+            if inherted[i]._construct then
+                inherted[i]._construct(parameters)
+            end
         end
         if rawget(def, "construct") then
             def.construct(parameters)
         end
     end
 
+
     --allow backwards compatibility. Legacy class calls it's own class constructor method
     if not def._legacy_inherit then
         function def._construct_new_class(parameters)
             --rawget because in a instance it may only be present in a hierarchy but not the table itself
-            if self._construct_new_class then
-                self._construct_new_class(parameters)
+            for i=(length-1), 1, -1 do
+                if inherted[i]._construct_new_class then
+                    inherted[i]._construct_new_class(parameters)
+                end
             end
             if rawget(def, "construct_new_class") then
                 def.construct_new_class(parameters)
@@ -72,11 +98,18 @@ function leef.new_class:new_class(def)
     end
 
     --iterate through table properties
-    setmetatable(def, {__index = self, __call = function(tbl, ...) tbl:new(...) end})
-
+    setmetatable(def, {
+        __index = def.parent_class, --if multiple inheritence it will be set to the dummy object
+        __call = function(tbl, ...)
+            tbl:new(...)
+        end
+    })
+    --call before new constructor is made
     if not def._legacy_inherit then
-        if self._construct_new_class then
-            self._construct_new_class(def, true)
+        for i=(length-1), 1, -1 do
+            if inherted[i]._construct_new_class then
+                inherted[i]._construct_new_class(def, true)
+            end
         end
     else
         def._construct(def)
@@ -147,7 +180,7 @@ function leef.new_class:dump(dump_classes)
     return str.."\n}"
 end
 
---deprecated. The same as new_class, but has settings differences.
+--deprecated. The same as new_class, but has settings differences. Please don't use this :(
 function leef.new_class:inherit(def)
     def._legacy_inherit = true
     self:new_class(def)

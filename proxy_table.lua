@@ -64,8 +64,9 @@ local proxy_metatable = {
 -- @tparam proxy proxy the proxy table
 -- @param key
 -- @param value
-function proxy_table.set_field_override(proxy,key,value)
+function proxy_table.set_field_override(proxy,...)
     --if value==nil then value=NIL_VALUE end
+
     local value_type = type(value)
     if value==nil then
         rawget(proxy, __LEEF_PROXY_OVERRIDES)[key] = NIL_VALUE
