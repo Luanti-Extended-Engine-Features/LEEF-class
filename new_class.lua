@@ -125,7 +125,7 @@ end
 -- @param self the table (which would be def from new()).
 -- @function new_class:construct
 
---- Called when an instance is created.
+--- Called when a new child class is created is created.
 -- will be called when a new child or grandchild (etc) class is created.
 -- useful for instantiation of subtables or any other data.
 -- @param self the table (which would be def from new()).
