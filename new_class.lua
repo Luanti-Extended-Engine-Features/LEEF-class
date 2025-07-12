@@ -31,7 +31,7 @@ leef.class.new_class = leef.new_class
 -- @field parent_class
 
 --- creates a new base class. Calls all constructors in the chain with def.instance=true. Can also be invoked by calling the class. Constructors will be called in reverse order (that way the first has the "final say" on all fields meaning highest priority)
--- @param ... tables inherited by def
+-- @param ... _additional_ tables inherited by def
 -- @param def the table containing the base definition of the class. This should contain a @{construct}
 -- @return def a new base class
 -- @function new_class:new_class
