@@ -3,7 +3,7 @@
 -- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module
 --
--- @classmod new_class
+-- @module new_class
 local objects = {}
 setmetatable(objects, {
     __mode = 'kv' --allow garbage collection.
@@ -192,8 +192,12 @@ end
 -- @param def definition of the class
 -- @treturn class
 -- @function leef.class.new_class
-function leef.class.new(def)
-    return leef.new_class:new_class(def)
+function leef.class.new(...)
+    if #{...}==1 then
+        return leef.new_class.new_class(leef.new_class, ...)
+    else
+        return leef.new_class.new_class(...)
+    end
 end
 
 --- checks if something is a class
