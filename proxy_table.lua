@@ -5,7 +5,7 @@
 --
 -- This works with a given tree of tables. But note it does not protect classes within the table from being modified.
 --
--- @module proxy_table
+-- @module class.proxy_table
 
 leef.class.proxy_table = {}
 local proxy_table = leef.class.proxy_table

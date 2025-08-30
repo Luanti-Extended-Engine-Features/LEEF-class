@@ -1,18 +1,38 @@
 --- An instantiatable class to inherit for defining new instantiatable classes classes
--- the "base" class. To make a new class call `leef.class.new(def)` or `leef.new_class:new_class(def)`
+-- the "base" class. To make a new class call `leef.class.new_class(def)` or `leef.new_class:new_class(def)`
 -- Also note that these classes will not have the type `table` but instead `class` when `type(object)` is called.
 -- This is apart of the [LEEF-class](https://github.com/Luanti-Extended-Engine-Features/LEEF-class) module
 --
--- @module new_class
-local objects = {}
+-- @module class.new_class
+
+leef.new_class = {
+    instance = false,
+    --name = "leef_base_class",
+    __call = function(tbl, ...)
+        tbl:new(...)
+    end
+    --__no_copy = true
+}
+local objects = {
+    [leef.new_class] = "class"
+}
 setmetatable(objects, {
     __mode = 'kv' --allow garbage collection.
 })
-leef.new_class = {
-    instance = false,
-    --__no_copy = true
-}
+
+--[[
+ leef.class       <-namespace of class related functions
+    new            --creates a new class with no parents (other than leef.new_class)
+    is_class       --checks if is a class
+
+ leef.new_class   <-base class
+    new            --instance of this class
+    new_class      --new child class from this clas
+]]
+
+--deprecated. New class
 leef.class.new_class = leef.new_class
+
 --TODO:
 --make base classes protected by proxy and only moddable by the file they were declared in using debug library.
 --allow
@@ -36,34 +56,57 @@ leef.class.new_class = leef.new_class
 -- @return def a new base class
 -- @function new_class:new_class
 function leef.new_class.new_class(...)
-    local inherted = {...}
-    local length = #inherted
-    local def = inherted[length]
-    inherted[#inherted] = nil
+    local inherited = {...}
+    local nvargs = select("#", ...)
 
+    --check for shit which will break other shit
+    for i=1,nvargs do
+        local v = inherited[i]
+        assert(i==nvargs or (type(v)=="class"), "bad argument #"..i.." to new_class. Expected class, got "..type(v))
+    end
+    local lastvartype = type(inherited[nvargs])
+    assert((lastvartype=="table") or (lastvartype=="class"), "bad argument (def) #"..nvargs.." to new_class. Expected table, got "..lastvartype)
+
+    --initialize some variables
+    local def = inherited[nvargs]
+    inherited[nvargs] = nil
+    local nparents = #inherited
+    inherited = setmetatable({}, {__index=inherited, __newindex=function()error("cannot override parents table")end})
+
+    --more error handling
     if not (objects[def] or (type(def) == "table")) then
         local info = debug.getinfo(2)
         error("class definition expected table, got `"..type(def).."` at class defined at "..info.short_src..":"..info.currentline)
     end
-
-    --set variables in this table.
     if not def.name then
         local info = debug.getinfo(2)
         minetest.log("warning", "LEEF new_class.lua: no name defined for class defined at "..info.short_src..":"..info.currentline)
-        def.name = info.source..":"..info.currentline
+        --def.name = info.source..":"..info.currentline
     end
+
+
+    --set variables in this table.
     objects[def] = "class"
     def.instance = false
 
     local self
-    if (length-1==1) or def._legacy_inherit then
-        self = inherted[1]
+    if (nparents==1) or def._legacy_inherit then
+        self = inherited[1]
         def.parent_class = self
     else
-        def.parent_class = setmetatable({name="multiple_inheritance"}, {__index=function(t, k)
-            for i=1,length-1 do
-                if inherted[i][k] then
-                    return inherted[i][k]
+        def.parent_class = setmetatable({}, {__index=function(t, k)
+            if k=="name" then
+                local new_list = {}
+                for i, _ in pairs(inherited) do
+                    table.insert(new_list, i)
+                end
+                return new_list
+            elseif k=="parent_class" then
+                return inherited
+            end
+            for i=1,nparents do
+                if inherited[i][k] then
+                    return inherited[i][k]
                 end
             end
         end})
@@ -71,9 +114,9 @@ function leef.new_class.new_class(...)
 
     --construction chain- calls all parent (and sub-parent) construction methods by calling its parent's constructor method (which then calls the next parent's etc)
     function def._construct(parameters)
-        for i=(length-1), 1, -1 do
-            if inherted[i]._construct then
-                inherted[i]._construct(parameters)
+        for i=nparents, 1, -1 do
+            if inherited[i]._construct then
+                inherited[i]._construct(parameters)
             end
         end
         if rawget(def, "construct") then
@@ -86,9 +129,9 @@ function leef.new_class.new_class(...)
     if not def._legacy_inherit then
         function def._construct_new_class(parameters)
             --rawget because in a instance it may only be present in a hierarchy but not the table itself
-            for i=(length-1), 1, -1 do
-                if inherted[i]._construct_new_class then
-                    inherted[i]._construct_new_class(parameters)
+            for i=nparents, 1, -1 do
+                if inherited[i]._construct_new_class then
+                    inherited[i]._construct_new_class(parameters)
                 end
             end
             if rawget(def, "construct_new_class") then
@@ -106,9 +149,9 @@ function leef.new_class.new_class(...)
     })
     --call before new constructor is made
     if not def._legacy_inherit then
-        for i=(length-1), 1, -1 do
-            if inherted[i]._construct_new_class then
-                inherted[i]._construct_new_class(def, true)
+        for i=nparents, 1, -1 do
+            if inherited[i]._construct_new_class then
+                inherited[i]._construct_new_class(def, true)
             end
         end
     else
@@ -153,7 +196,7 @@ end
 
 --- (for printing) dumps the variables of this class
 -- @param self
--- @tparam bool dump_classes whether to also print/dump classes.
+-- @tparam bool dump_classes whether to also print/dump sub-classes.
 -- @treturn string
 -- @function new_class:dump
 function leef.new_class:dump(dump_classes)
@@ -171,7 +214,7 @@ function leef.new_class:dump(dump_classes)
             if dump_classes then
                 str = str..v:dump():gsub("\n", "\n\t")
             else
-                str = str..tostring(v..":<"..v.name..">:"..((v.instance and "instance=true") or "instance=false"))
+                str = str..string.sub(tostring(v), 7)..((v.name and ":<"..v.name..">:") or ":<nameless class>:")..((v.instance and "instance=true") or "instance=false")
             end
         else
             str = str..tostring(v)
@@ -189,9 +232,9 @@ end
 
 
 --- creates a new class
--- @param def definition of the class
--- @treturn class
--- @function leef.class.new_class
+-- @param ... (optional) tables inherited by the new class, defaults to `leef.new_class`
+-- @param def the table containing the base definition of the class. This should contain a @{construct}-- @treturn class
+-- @function leef.class.new
 function leef.class.new(...)
     if #{...}==1 then
         return leef.new_class.new_class(leef.new_class, ...)
